@@ -1,0 +1,16 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /identify
+
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/identify_service"
+    username: root
+    password: password
+  jpa:
+    hibernate:
+        ddl-auto: update
+    show-sql: true
+jwt:
+  singing-key: "2iEh1Qn9aEk3jbTIodkPyibsooGNr0dFK4W9+LA9hTndjkd3sjm2KgJ4NkB/2AJe"
