@@ -81,8 +81,8 @@ public class AuthenticationService {
     //Get roles of user
     private String buildScope(User user) {
         StringJoiner stringJoiner = new StringJoiner(" ");//define delimiter is " " for all roles
-        if(!CollectionUtils.isEmpty(user.getRoles()))
-            user.getRoles().forEach(stringJoiner::add);
+//        if(!CollectionUtils.isEmpty(user.getRoles()))
+//            user.getRoles().forEach(stringJoiner::add);
         return stringJoiner.toString();
     }
 }
