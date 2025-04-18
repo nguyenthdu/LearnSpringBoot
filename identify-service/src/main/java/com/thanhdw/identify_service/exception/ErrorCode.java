@@ -13,6 +13,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(1006, "User not found", HttpStatus.NOT_FOUND),
     UNAUTHENTICATED(1007, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1008, "You do not have permission", HttpStatus.FORBIDDEN),
+    INVALID_DOB(1009, "Your are must be at least {min}", HttpStatus.BAD_REQUEST),
     ;
     private int code;
     private String message;
