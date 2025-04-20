@@ -1,4 +1,4 @@
-package com.thanhdw.identify_service.dto.response;
+package com.thanhdw.identify_service.dto.response; 
 
 import com.thanhdw.identify_service.entity.Role;
 import lombok.*;
@@ -18,5 +18,5 @@ public class UserResponse {
      String firstName;
      String lastName;
      LocalDate dob;
-     Set<Role> roles;
+     Set<RoleResponse> roles;
 }

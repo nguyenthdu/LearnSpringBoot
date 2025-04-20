@@ -8,6 +8,7 @@ import com.thanhdw.identify_service.enums.Role;
 import com.thanhdw.identify_service.exception.AppException;
 import com.thanhdw.identify_service.exception.ErrorCode;
 import com.thanhdw.identify_service.mapper.UserMapper;
+import com.thanhdw.identify_service.repository.RoleRepository;
 import com.thanhdw.identify_service.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,8 @@ public class UserService {
     UserRepository userRepository;
     //    @Autowired
     UserMapper userMapper;
+    RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
     
     public UserResponse createUser(UserCreationRequest request) {
         if(userRepository.existsByUsername(request.getUsername())) {
@@ -59,7 +62,9 @@ public class UserService {
         return userMapper.toUserResponse(user);
     }
     
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")//spring se map với các authority có prefix là ROLE_
+//    @PreAuthorize("hasAuthority('CREATE_DATA')")//map voi tat ca auth ke ca permission
+    //1 so api phan quyen theo permission, 1 so api phan quyen theo role
     public List<UserResponse> getUsers() {
         log.info("Get all users");
         return userRepository.findAll().stream().map(userMapper::toUserResponse).collect(Collectors.toList());
@@ -67,7 +72,6 @@ public class UserService {
     
     //    @PostAuthorize("hasRole('ADMIN') or returnObject.username == authentication.name")
     //    @PostAuthorize("hasRole('ADMIN')")
-    @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse getUserById(String userId) {
         log.info("Get user by id: {}", userId);
         return userMapper.toUserResponse(userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
@@ -76,6 +80,9 @@ public class UserService {
     public UserResponse updateUser(String userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userMapper.updateUser(user, request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        var roles = roleRepository.findAllById(request.getRoles());
+        user.setRoles(new HashSet<>(roles));
         //        user.setPassword(request.getPassword());
         //        user.setFirstName(request.getFirstName());
         //        user.setLastName(request.getLastName());
@@ -87,7 +94,7 @@ public class UserService {
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userRepository.delete(user);
     }
-    
+    @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse getMyInfo() {
         log.info("Get my info");
         //khi request thanh cong thi thong tin se duoc luu trong SecurityContextHolder

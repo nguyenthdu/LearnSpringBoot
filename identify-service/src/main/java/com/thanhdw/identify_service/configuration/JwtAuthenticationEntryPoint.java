@@ -15,22 +15,21 @@ import java.io.IOException;
 
 @Slf4j
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+    
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
-            throws IOException, ServletException {
+    public void commence(HttpServletRequest request, HttpServletResponse response,
+            AuthenticationException authException) throws IOException, ServletException {
         log.error("Unauthorized error: {}", authException.getMessage());
         ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
         response.setStatus(errorCode.getHttpStatusCode().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         
-        ApiResponse<?> apiResponse = ApiResponse.builder()
-                .code(errorCode.getCode())
-                .message(errorCode.getMessage())
-                .build();
+        ApiResponse<?> apiResponse =
+                ApiResponse.builder().code(errorCode.getCode()).message(errorCode.getMessage()).build();
         
         ObjectMapper objectMapper = new ObjectMapper();
         
-      response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
+        response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
         response.flushBuffer();
     }
 }

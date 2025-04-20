@@ -6,7 +6,7 @@ import com.thanhdw.identify_service.entity.Role;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
-public interface RoleMaper
+public interface RoleMapper
 {
     @Mapping(target = "permissions", ignore = true)
     Role toRole(RoleRequest request);

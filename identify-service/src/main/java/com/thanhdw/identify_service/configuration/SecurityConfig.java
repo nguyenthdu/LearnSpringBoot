@@ -24,57 +24,64 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableWebSecurity
 
 /*
-* co 2 cach phan quyen
-* 1. Phan quyen tren endpoint nhu
-*   .requestMatchers(HttpMethod.GET, "/user")
-*   .hasAuthority("ROLE_ADMIN")
-* 2. Phan quyen theo method
-*
-* */
+ * co 2 cach phan quyen
+ * 1. Phan quyen tren endpoint nhu
+ *   .requestMatchers(HttpMethod.GET, "/user")
+ *   .hasAuthority("ROLE_ADMIN")
+ * 2. Phan quyen theo method
+ *
+ * */
 @EnableMethodSecurity
 public class SecurityConfig {
+    
     private final String[] PUBLIC_ENDPOINTS = {
-            "/user", "/auth/token", "/auth/introspect",
+            "/user", "/auth/token", "/auth/introspect", "auth/logout",
             };
-    @Value("${jwt.singing-key}")
-    private String signingKey;
+    
+    private CustomerJwtDecoder customerJwtDecoder;
+    //    @Value("${jwt.singing-key}")
+    //    private String signingKey;
     
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(requests ->
-                //Xác đinh các endpoint  không cần xác thực
-                requests.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                        //Xác định các endpoint cần xác thực
-//                        .requestMatchers(HttpMethod.GET, "/user")
-//                        .hasAuthority("ROLE_ADMIN") - cach 1
-//                        .hasRole(Role.ADMIN.name())//cach 2
-                        .anyRequest().authenticated());// Tất cả các request còn lại đều cần xác thực
+                                                   //Xác đinh các endpoint  không cần xác thực
+                                                   requests.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
+                                                           .permitAll()
+                                                           //Xác định các endpoint cần xác thực
+                                                           //                        .requestMatchers(HttpMethod.GET, "/user")
+                                                           //                        .hasAuthority("ROLE_ADMIN") - cach 1
+                                                           //                        .hasRole(Role.ADMIN.name())//cach 2
+                                                           .anyRequest()
+                                                           .authenticated());// Tất cả các request còn lại đều cần xác thực
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(
-                jwtConfigurer -> jwtConfigurer
-                        .decoder(jwtDecoder()).jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
+                        jwtConfigurer -> jwtConfigurer.decoder(customerJwtDecoder)
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
         return httpSecurity.build();
     }
     
     //costomize jwtAuthenticationConverter
     @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter(){
+    JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
         
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
-        return     jwtAuthenticationConverter;
+        return jwtAuthenticationConverter;
     }
-    @Bean
-    JwtDecoder jwtDecoder() {
-        SecretKeySpec secretKeySpec = new SecretKeySpec(signingKey.getBytes(), "HmacSHA256");
-        return NimbusJwtDecoder.withSecretKey(secretKeySpec).macAlgorithm(MacAlgorithm.HS512).build();
-    }
+    //chiu trach nhiem cho viec verify token
+    //    @Bean
+    //    JwtDecoder jwtDecoder() {
+    //        SecretKeySpec secretKeySpec = new SecretKeySpec(signingKey.getBytes(), "HmacSHA256");
+    //        return NimbusJwtDecoder.withSecretKey(secretKeySpec).macAlgorithm(MacAlgorithm.HS512).build();
+    //    }
+    
     //init Bean PasswordEncoder
     @Bean
-    PasswordEncoder passwordEncoder(){
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
     }
 }

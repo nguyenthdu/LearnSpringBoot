@@ -5,11 +5,13 @@ import com.thanhdw.identify_service.dto.request.UserUpdateRequest;
 import com.thanhdw.identify_service.dto.response.UserResponse;
 import com.thanhdw.identify_service.entity.User;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     User toUser(UserCreationRequest request);
+    @Mapping(target = "roles", ignore = true)
     void updateUser(@MappingTarget User user, UserUpdateRequest request);
     UserResponse toUserResponse(User user);
     //neu 2 file khac nhau
