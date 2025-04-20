@@ -14,3 +14,5 @@ spring:
     show-sql: false
 jwt:
   singing-key: "2iEh1Qn9aEk3jbTIodkPyibsooGNr0dFK4W9+LA9hTndjkd3sjm2KgJ4NkB/2AJe"
+  valid-duration: 3600 #in second
+  refreshable-duration: 360000 #in second
