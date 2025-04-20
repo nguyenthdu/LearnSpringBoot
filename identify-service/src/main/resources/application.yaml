@@ -11,6 +11,6 @@ spring:
   jpa:
     hibernate:
         ddl-auto: update
-    show-sql: true
+    show-sql: false
 jwt:
   singing-key: "2iEh1Qn9aEk3jbTIodkPyibsooGNr0dFK4W9+LA9hTndjkd3sjm2KgJ4NkB/2AJe"

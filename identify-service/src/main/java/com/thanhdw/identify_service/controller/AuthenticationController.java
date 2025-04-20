@@ -1,10 +1,7 @@
 package com.thanhdw.identify_service.controller;
 
 import com.nimbusds.jose.JOSEException;
-import com.thanhdw.identify_service.dto.request.ApiResponse;
-import com.thanhdw.identify_service.dto.request.AuthenticationRequest;
-import com.thanhdw.identify_service.dto.request.IntrospectRequest;
-import com.thanhdw.identify_service.dto.request.LogoutRequest;
+import com.thanhdw.identify_service.dto.request.*;
 import com.thanhdw.identify_service.dto.response.AuthenticationResponse;
 import com.thanhdw.identify_service.dto.response.IntrospectResponse;
 import com.thanhdw.identify_service.service.AuthenticationService;
@@ -46,5 +43,12 @@ public class AuthenticationController {
                 .result(null)
                 .build();
     }
-
+    @PostMapping("/refresh")
+    ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshRequest request)
+            throws ParseException, JOSEException {
+        var result = authenticationService.refreshToken(request);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
+                .build();
+    }
 }

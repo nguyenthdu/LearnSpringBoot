@@ -8,6 +8,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.thanhdw.identify_service.dto.request.AuthenticationRequest;
 import com.thanhdw.identify_service.dto.request.IntrospectRequest;
 import com.thanhdw.identify_service.dto.request.LogoutRequest;
+import com.thanhdw.identify_service.dto.request.RefreshRequest;
 import com.thanhdw.identify_service.dto.response.AuthenticationResponse;
 import com.thanhdw.identify_service.dto.response.IntrospectResponse;
 import com.thanhdw.identify_service.entity.InvalidatedToken;
@@ -51,7 +52,7 @@ public class AuthenticationService {
     //    protected static final String KEY="2iEh1Qn9aEk3jbTIodkPyibsooGNr0dFK4W9+LA9hTndjkd3sjm2KgJ4NkB/2AJe";
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         var user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
         if(!authenticated) {
@@ -64,12 +65,13 @@ public class AuthenticationService {
     private String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder().subject(user.getUsername())//dai dien user dang nhap
-                .issuer("http://localhost:8080")//dia chi server
-                .issueTime(new Date()).expirationTime(
+                                                              .issuer("http://localhost:8080")//dia chi server
+                                                              .issueTime(new Date()).expirationTime(
                         new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))//thoi gian ton tai token
-                //de kiem tra token het han thi chi luu id nhung token da het han ma khong can luu tat ca token
-                .jwtID(UUID.randomUUID().toString()).claim("scope", buildScope(user))//thong tin khac
-                .build();
+                                                              //de kiem tra token het han thi chi luu id nhung token da het han ma khong can luu tat ca token
+                                                              .jwtID(UUID.randomUUID().toString())
+                                                              .claim("scope", buildScope(user))//thong tin khac
+                                                              .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(header, payload);
         try {
@@ -100,12 +102,11 @@ public class AuthenticationService {
     private String buildScope(User user) {
         StringJoiner stringJoiner = new StringJoiner(" ");//define delimiter is " " for all roles
         //add role into scope
-        if(!CollectionUtils.isEmpty(user.getRoles()))
-            user.getRoles().forEach(role -> {
-                stringJoiner.add("ROLE_" + role.getName());
-                if(!CollectionUtils.isEmpty(role.getPermissions()))
-                    role.getPermissions().forEach(permission -> stringJoiner.add(permission.getName()));
-            });
+        if(!CollectionUtils.isEmpty(user.getRoles())) user.getRoles().forEach(role -> {
+            stringJoiner.add("ROLE_" + role.getName());
+            if(!CollectionUtils.isEmpty(role.getPermissions()))
+                role.getPermissions().forEach(permission -> stringJoiner.add(permission.getName()));
+        });
         return stringJoiner.toString();
     }
     
@@ -132,5 +133,21 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
         return signedJWT;
+    }
+    
+    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+        var signedJWT = verifyToken(request.getToken());
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder().id(jit).expiryTime(expirationTime).build();
+        invalidatedTokenRepository.save(invalidatedToken);
+        // lay thong tin user tu token
+        var username = signedJWT.getJWTClaimsSet().getSubject();
+        var user =
+                userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        // tao token moi
+        var token = generateToken(user);
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
+        
     }
 }
