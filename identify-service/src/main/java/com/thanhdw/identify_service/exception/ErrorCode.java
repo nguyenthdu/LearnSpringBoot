@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatusCode;
 public enum ErrorCode {
     USER_EXISTS(1001, "User already exists", HttpStatus.BAD_REQUEST ),
     UNCATEGORIZED_ERROR(1002, "Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
-    USERNAME_INVALID(1003, "Username must not be empty", HttpStatus.BAD_REQUEST),
+    USERNAME_INVALID(1003, "Username must not be empty {min}", HttpStatus.BAD_REQUEST),
     PASSWORD_INVALID(1004, "Password must be between 2 and 50 characters", HttpStatus.BAD_REQUEST),
     INVALID_KEY(1005, "Invalid key", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND(1006, "User not found", HttpStatus.NOT_FOUND),
