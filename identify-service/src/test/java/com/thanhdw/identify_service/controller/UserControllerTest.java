@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -23,6 +24,8 @@ import java.time.LocalDate;
 @Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc //tao request toi controller
+//khai bao config voi test
+@TestPropertySource("/test.properties")// de cho test chay voi config test
 public class UserControllerTest {
     
     @Autowired
@@ -106,3 +109,26 @@ public class UserControllerTest {
 /*
  * jackson khong ho tro localdate can phai them jackson-datatype-jsr310
  * */
+
+
+/*TODO:
+* Khi chạy test với H2 database sẽ gặp lỗi  ở đoạn:
+* ================================================================
+* public class ApplicationInitConfig {
+    PasswordEncoder passwordEncoder;
+    @Bean
+    ApplicationRunner applicationRunner(UserRepository userRepository){
+        return args -> {
+            // Initialize the application here
+            // For example, you can load initial data or perform any setup tasks
+            if(userRepository.findByUsername("admin").isEmpty()) {
+  =============================================================
+  * Lý do: H2 database không có dữ liệu admin, các câu lệnh trong H2 không hoàn toàn giống với MySQL
+  * Cách khắc phục:
+  * @ConditionalOnProperty(
+            prefix = "spring", value = "datasource.driverClassName", havingValue = "com.mysql.cj.jdbc.Driver"
+    )
+    => Isolate đoạn code này với H2 database
+    * Mang lại tính linh hoạt cho ứng dụng, có thể chạy trên nhiều môi trường khác nhau mà không cần thay đổi mã nguồn.
+    *
+* */
