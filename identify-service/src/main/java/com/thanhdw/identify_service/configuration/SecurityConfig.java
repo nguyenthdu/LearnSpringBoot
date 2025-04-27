@@ -1,6 +1,7 @@
 package com.thanhdw.identify_service.configuration;
 
 import com.thanhdw.identify_service.enums.Role;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +10,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.CorsConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -17,9 +19,13 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import javax.crypto.spec.SecretKeySpec;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 
@@ -63,6 +69,7 @@ public class SecurityConfig {
     }
     
     //costomize jwtAuthenticationConverter
+    //dùng để lấy các quyền từ token và chuyển đổi thành các quyền trong hệ thống
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
@@ -78,10 +85,27 @@ public class SecurityConfig {
     //        SecretKeySpec secretKeySpec = new SecretKeySpec(signingKey.getBytes(), "HmacSHA256");
     //        return NimbusJwtDecoder.withSecretKey(secretKeySpec).macAlgorithm(MacAlgorithm.HS512).build();
     //    }
-    
     //init Bean PasswordEncoder
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
+    }
+    @Bean
+    public CorsFilter corsFilter() {
+        log.info("Configuring CORS");
+        CorsConfiguration config = new CorsConfiguration();
+        //cho phep api truy cap tu origin nao
+        // dung tu web naoo truy cap api do
+        config.addAllowedOrigin("http://localhost:3000");
+        //cho phep method nao
+        config.addAllowedMethod("*");
+        //cho phep header nao
+        config.addAllowedHeader("*");
+        config.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        //khai bao theo tung endpoint
+        source.registerCorsConfiguration("/**", config);
+        
+        return new CorsFilter(source);
     }
 }
