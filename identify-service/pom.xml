@@ -170,7 +170,7 @@
                         <exclude>com/thanndw/identify_service/dto/**</exclude>
                         <exclude>com/thanndw/identify_service/entity/**</exclude>
                         <exclude>com/thanndw/identify_service/mapper/**</exclude>
-                        <exclude>com/thanndw/identify_service/còniguration/**</exclude>
+                        <exclude>com/thanndw/identify_service/configuration/**</exclude>
 
                     </excludes>
                 </configuration>

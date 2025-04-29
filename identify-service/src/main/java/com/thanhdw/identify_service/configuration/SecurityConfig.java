@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -20,10 +21,13 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.time.Duration;
+import java.util.List;
 
 @Slf4j
 @Configuration
@@ -49,23 +53,32 @@ public class SecurityConfig {
     //    private String signingKey;
     
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.authorizeHttpRequests(requests ->
-                                                   //Xác đinh các endpoint  không cần xác thực
-                                                   requests.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
-                                                           .permitAll()
-                                                           //Xác định các endpoint cần xác thực
-                                                           //                        .requestMatchers(HttpMethod.GET, "/user")
-                                                           //                        .hasAuthority("ROLE_ADMIN") - cach 1
-                                                           //                        .hasRole(Role.ADMIN.name())//cach 2
-                                                           .anyRequest()
-                                                           .authenticated());// Tất cả các request còn lại đều cần xác thực
-        httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(
-                        jwtConfigurer -> jwtConfigurer.decoder(customerJwtDecoder)
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+                /* 1) Kích hoạt CORS trước security filters */
+                .cors(Customizer.withDefaults())
+                
+                /* 2) Tắt CSRF cho API stateless */
+                .csrf(AbstractHttpConfigurer::disable)
+                
+                /* 3) Cho phép pre-flight OPTIONS + endpoint public */
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()   // <-- quan trọng
+                        .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                        //Xác định các endpoint cần xác thực
+                        //                        .requestMatchers(HttpMethod.GET, "/user")
+                        //                        .hasAuthority("ROLE_ADMIN") - cach 1
+                        //                        .hasRole(Role.ADMIN.name())//cach 2
+                        .anyRequest().authenticated())
+                
+                /* 4) Resource server JWT */
+                .oauth2ResourceServer(oauth -> oauth
+                        .jwt(jwt -> jwt
+                                .decoder(customerJwtDecoder)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
-        httpSecurity.csrf(AbstractHttpConfigurer::disable);
-        return httpSecurity.build();
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
+                
+                .build();
     }
     
     //costomize jwtAuthenticationConverter
@@ -105,7 +118,20 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         //khai bao theo tung endpoint
         source.registerCorsConfiguration("/**", config);
-        
+
         return new CorsFilter(source);
     }
+//    @Bean
+//    CorsConfigurationSource corsConfigurationSource() {
+//        CorsConfiguration cfg = new CorsConfiguration();
+//        cfg.setAllowedOriginPatterns(List.of("http://localhost:3000"));   // React dev-server
+//        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
+//        cfg.setAllowedHeaders(List.of("*"));           // có Authorization
+//        cfg.setAllowCredentials(true);
+//        cfg.setMaxAge(Duration.ofHours(1));
+//
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/**", cfg);
+//        return source;
+//    }
 }

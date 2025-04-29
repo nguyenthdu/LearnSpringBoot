@@ -59,6 +59,7 @@ public class AuthenticationService {
     
     //    protected static final String KEY="2iEh1Qn9aEk3jbTIodkPyibsooGNr0dFK4W9+LA9hTndjkd3sjm2KgJ4NkB/2AJe";
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        log.info("sign-key", KEY);
         var user = userRepository.findByUsername(request.getUsername())
                                  .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);

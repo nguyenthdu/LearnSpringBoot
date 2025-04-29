@@ -1,0 +1,4 @@
+jwt:
+  singing-key: "B+8ThVqn9ncIFy0kMywwfEg82ipaEQcoPvPIBzpro2af4FmnlyF0OECgj0EyoO3F"
+  valid-duration: 3600 #in second
+  refreshable-duration: 360000 #in second

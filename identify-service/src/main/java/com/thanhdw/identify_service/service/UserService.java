@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,9 +45,10 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     
     public UserResponse createUser(UserCreationRequest request) {
-        if(userRepository.existsByUsername(request.getUsername())) {
-            throw new AppException(ErrorCode.USER_EXISTS);
-        }
+        //TODO: khong can phai check trung khi da check unique
+//     if(        userRepository.findByUsername(request.getUsername()).isPresent()) {
+//            throw new AppException(ErrorCode.USER_EXISTS);
+//        }
         User user = userMapper.toUser(request);
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -58,7 +60,13 @@ public class UserService {
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
 //        user.setRoles(roles);
-        userRepository.save(user);
+        //bat loi trung trong unique
+        try {
+            user = userRepository.save(user);
+        }catch (DataIntegrityViolationException e)
+        {
+            throw  new AppException(ErrorCode.USER_EXISTS);
+        }
         return userMapper.toUserResponse(user);
     }
     

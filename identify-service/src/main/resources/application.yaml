@@ -5,7 +5,8 @@ server:
 
 spring:
   datasource:
-    url: "jdbc:mysql://localhost:3306/identify_service"
+#    url: "jdbc:mysql://localhost:3306/identify_service"
+    url: ${DBMS_URL:jdbc:mysql://172.17.0.2:3306/identify_service}
     driverClassName: com.mysql.cj.jdbc.Driver
     username: root
     password: password
